@@ -7,9 +7,9 @@ origin_position = np.array([450., 0])
 canvas_size = (900, 500)
 
 # How often change position
-update_timeout = 500
+update_timeout = 250
 # Angular speed, limits maximum angle change per timeout
-angular_delta = 10 * np.pi / 180
+angular_delta = 5 * np.pi / 180
 
 
 def coordinates2angles(x, y):
