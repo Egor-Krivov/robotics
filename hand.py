@@ -1,6 +1,7 @@
-import numpy as np
-
+import math
 import tkinter as tk
+
+import numpy as np
 
 hand_lengths = [150, 250]
 origin_position = np.array([450., 0])
@@ -13,7 +14,20 @@ angular_delta = 5 * np.pi / 180
 
 
 def coordinates2angles(x, y):
-    return np.pi * x / canvas_size[0], np.pi * y / canvas_size[1]
+    x = x - origin_position[0]
+    y = y - origin_position[1]
+
+    c2 = (x ** 2 + y ** 2 - hand_lengths[0] ** 2 - hand_lengths[1] ** 2) / (2 * hand_lengths[0] * hand_lengths[1])
+    s2 = math.sqrt(1 - c2 ** 2)  # +/-
+
+    c1 = ((hand_lengths[0] + hand_lengths[1] * c2) * x + hand_lengths[1] * y * s2) / (x ** 2 + y ** 2)
+    s1 = math.sqrt(1 - c1 ** 2)  # +/-
+
+    angle2 = math.atan2(s2, c2)
+    angle1 = math.atan2(s1, c1)
+
+    print(angle1 * 180 / np.pi, angle2 * 180 / np.pi)
+    return angle1, angle2
 
 
 def compute_positions(angles):
