@@ -1,46 +1,49 @@
-import numpy as np
+from collections import deque
+
 import matplotlib.pyplot as plt
-import scipy.integrate as integrate
 import matplotlib.animation as animation
-from scipy.interpolate import interp1d
-from sklearn.preprocessing import normalize
+
+from agent import Agent
+
+
+def make_agent_tracker(agent: Agent, track_len):
+    track = deque([agent.position], maxlen=track_len)
+
+    def get_next_track():
+        track.append(agent.get_next_position())
+        return track
+
+    return get_next_track
 
 
 class SceneVisualization:
-    def __init__(self, agents, lim):
+    def __init__(self, agents: [Agent], lim, track_len, n_frames, ndim):
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111, aspect='equal', autoscale_on=False, xlim=lim, ylim=lim)
         self.ax.grid()
 
-        self.agents = agents
+        self.ndim = ndim
+        self.n_frames = n_frames
+        self.agent_trackers = [make_agent_tracker(agent, track_len) for agent in agents]
 
-        self.line_dis, = self.ax.plot([], [], '-', lw=2)
-        self.pos_dis, = self.ax.plot([], [], 'o', lw=3, c='b')
-        self.line_drone, = self.ax.plot([], [], 'x', markersize=8, lw=3, c='b')
+    def init_plot(self):
+        self.agents_lines = self.ax.plot(*[[] for _ in range(2 * len(self.agent_trackers))], '-', lw=2)
+        self.agents_positions = self.ax.plot(*[[] for _ in range(2 * len(self.agent_trackers))], 'o', lw=3, c='b')
 
-    def clear_plot(self):
-        self.line_dis.set_data([], [])
-        self.line_drone.set_data([], [])
-        self.pos_dis.set_data([], [])
-        return self.line_dis, self.line_drone, self.pos_dis
+        # pos_dis, = self.ax.plot([], [], 'o', lw=3, c='b')
+        # line_drone, = self.ax.plot([], [], 'x', markersize=8, lw=3, c='b')
+
+        return (*self.agents_lines, *self.agents_positions)
 
     def do_model_step(self, i):
-        line_dis, = self.ax.plot([], [], '-', lw=2)
-        pos_dis, = self.ax.plot([], [], 'o', lw=3, c='b')
-        line_drone, = self.ax.plot([], [], 'x', markersize=8, lw=3, c='b')
+        for i, track_agent in enumerate(self.agent_trackers):
+            track = track_agent()
+            self.agents_lines[i].set_data(*[[point[i] for point in track] for i in range(self.ndim)])
+            self.agents_positions[i].set_data(*track[-1])
 
-        #line_dis.set_data(disturber.trajectory[:i, :].T)
-        #pos_dis.set_data(disturber.current_pos)
+        # line_drone.set_color('r')
+        # line_drone.set_color('b')
 
-        #line_drone.set_color('r')
-
-        #line_drone.set_color('b')
-        #line_drone.set_data(drone.current_pos)
-
-
-
-
-ani = animation.FuncAnimation(fig, animate, frames=n_frames,
-                              interval=10, blit=True, init_func=init)
-
-plt.show()
+    def mainloop(self):
+        ani = animation.FuncAnimation(self.fig, self.do_model_step, interval=10, blit=False, init_func=self.init_plot)
+        plt.show()
