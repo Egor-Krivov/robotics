@@ -4,11 +4,12 @@ import scipy.integrate as integrate
 import matplotlib.animation as animation
 from scipy.interpolate import interp1d
 from sklearn.preprocessing import normalize
+import collections
 
 low = 0
 high = 10
 n_frames = 1000
-np.random.seed(42)
+np.random.seed(21)
 
 
 def create_trajectory(points_initial=7, points_generated=n_frames):
@@ -27,16 +28,18 @@ def calc_normal(vector):
     normal[1] = - vector[0]
     return normal
 
+def flatten(some_list):
+    for el in some_list:
+        if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
+
 trajectory = create_trajectory()
 
 
 class Disturber:
-    """disturber
-
-    init_state is [theta1, omega1, theta2, omega2] in degrees,
-    where theta1, omega1 is the angular position and velocity of the first
-    pendulum arm, and theta2, omega2 is that of the second pendulum arm
-    """
+    """disturber"""
 
     def __init__(self, radius = 0.5):
                 self.radius = radius
@@ -53,12 +56,7 @@ class Disturber:
 
 
 class Drone:
-    """Drone
-
-    init_state is [theta1, omega1, theta2, omega2] in degrees,
-    where theta1, omega1 is the angular position and velocity of the first
-    pendulum arm, and theta2, omega2 is that of the second pendulum arm
-    """
+    """Drone"""
     def __init__(self,
                 radius = 0.5,
                 initial_pos = np.array([5, 5]),
@@ -81,7 +79,7 @@ class Drone:
 
 dis = Disturber()
 drone = Drone()
-swarm = [Drone(initial_pos=np.array([1, 1])), Drone(initial_pos=np.array([5, 5]))]
+swarm = [Drone(initial_pos=np.array([2, 2])), Drone(initial_pos=np.array([5, 2])), Drone(initial_pos=np.array([7, 7]))]
 fig = plt.figure()
 ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
                      xlim=(low, high), ylim=(low, high))
@@ -89,8 +87,8 @@ ax.grid()
 
 line_dis, = ax.plot([], [], '-', lw=2)
 pos_dis, = ax.plot([], [], 'o', lw=3, c='b')
-#line_drone, = ax.plot([], [], 'x', markersize=8, lw=3, c='b')
-line_drone_list = [ax.plot([], [], 'x', markersize=8, lw=3, c='b') for drone in swarm]
+line_drone_list = [ax.plot([], [], 'x', markersize=8, lw=3, c='b')[0] for _ in swarm]
+print(type(pos_dis))
 
 #------------------------------------------------------------
 # set up figure and animation
@@ -99,30 +97,32 @@ def animate(i):
     #global dis, drone
     line_dis.set_data(trajectory[:i, :].T)
     pos_dis.set_data(dis.current_pos)
-    for i, drone in enumerate(swarm):
+    for num, drone in enumerate(swarm):
         distance = np.linalg.norm(dis.current_pos - drone.current_pos)
-
+        if num==0:
+            print(distance)
         if distance < drone.dist_permitted:
-            line_drone_list[i].set_color('r')
+            line_drone_list[num].set_color('r')
             normal = dis.normal.ravel()
             normal = normal * np.sign(np.dot(drone.current_pos - dis.current_pos, normal))
             drone.move(normal)
         else:
-            if (drone.initial_pos  != drone.current_pos).any():
+            if (drone.initial_pos != drone.current_pos).any():
                 drone.move_back()
-            line_drone_list[i].set_color('b')
-            line_drone_list[i].set_data(drone.current_pos)
+            line_drone_list[num].set_color('b')
+            line_drone_list[num].set_data(drone.current_pos)
     dis.move(i)
-    return line_dis, line_drone_list, pos_dis
+    output = tuple(flatten([line_dis, line_drone_list, pos_dis]))
+    return output
 
 def init():
     """initialize animation"""
     line_dis.set_data([], [])
     for elem in line_drone_list:
-        print(type(elem))
         elem.set_data([], [])
     pos_dis.set_data([], [])
-    return line_dis, line_drone_list, pos_dis
+    output = tuple(flatten([line_dis, line_drone_list, pos_dis]))
+    return output
 
 ani = animation.FuncAnimation(fig, animate, frames=n_frames,
                               interval=10, blit=True, init_func=init)
