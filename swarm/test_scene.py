@@ -7,8 +7,8 @@ from utils import flatten, create_trajectory
 low = 0
 high = 10
 n_frames = 1000
-points_initial = 7
-np.random.seed(28)
+points_initial = 11
+np.random.seed(21)
 
 
 def render():
@@ -49,7 +49,9 @@ def render():
 
 trajectory = create_trajectory(low, high, points_initial, points_generated=n_frames)
 
-swarm = (Drone(initial_pos=np.array([2, 2])), Drone(initial_pos=np.array([5, 2])), Drone(initial_pos=np.array([7, 7])))
+swarm = (Drone(initial_pos=np.array([2, 5]), drone_id=1), Drone(initial_pos=np.array([4, 5]), drone_id=2), Drone(initial_pos=np.array([7, 7]), drone_id=3),
+         Drone(initial_pos=np.array([6, 5]), drone_id=4), Drone(initial_pos=np.array([8, 1]), drone_id=5), Drone(initial_pos=np.array([8, 8]), drone_id=6),
+         Drone(initial_pos=np.array([1, 8]), drone_id=1))
 disturber = Disturber(initial_pos=trajectory[0, :])
 scene = Scene(disturber, swarm)
 
