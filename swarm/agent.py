@@ -8,15 +8,3 @@ class Agent:
 
     def get_next_position(self):
         return self.position
-
-
-class TrajectoryAgent(Agent):
-    def __init__(self, agents, trajectory):
-        self.iteration = 0
-        self.trajectory = trajectory
-
-        super().__init__(agents, trajectory[self.iteration])
-
-    def get_next_position(self):
-        self.iteration += 1
-        return self.trajectory[self.iteration]

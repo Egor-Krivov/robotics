@@ -2,15 +2,14 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from utils import calc_normal
 
-from agent import Agent, TrajectoryAgent
+from agent import Agent
 
 norm = np.linalg.norm
 
 
-class Disturber(TrajectoryAgent):
-    def __init__(self, agents, trajectory, radius=1, step=0.1):
-        super().__init__(agents, trajectory)
-
+class Disturber(Agent):
+    def __init__(self, agents, initial_position, radius=1, step=0.1):
+        super().__init__(agents, initial_position)
         self.radius = radius
         self.step = step
         self.velocity_dir = np.zeros(2)
@@ -21,6 +20,18 @@ class Disturber(TrajectoryAgent):
         super().update_position(position)
 
         self.normal = calc_normal(self.velocity_dir)
+
+
+class TrajectoryDisturber(Disturber):
+    def __init__(self, agents, trajectory, radius=1, step=0.1):
+        self.iteration = 0
+        self.trajectory = trajectory
+
+        super().__init__(agents, trajectory[self.iteration], radius, step)
+
+    def get_next_position(self):
+        self.iteration += 1
+        return self.trajectory[self.iteration]
 
 
 class Drone(Agent):
@@ -44,8 +55,9 @@ class Drone(Agent):
         for agent in self.agents:
             if agent is self:
                 continue
-            if norm(self.position - agent.position) <= (self.radius + agent.radius):
-                force += agent.normal.ravel() * np.sign(np.dot(self.position - agent.position, agent.normal.ravel()))
+            elif isinstance(agent, Disturber) or isinstance(agent, Drone):
+                if norm(self.position - agent.position) <= (self.radius + agent.radius):
+                    force += agent.normal.ravel() * np.sign(np.dot(self.position - agent.position, agent.normal.ravel()))
 
         force += compute_border_force(self.position, self.radius, self.borders)
 

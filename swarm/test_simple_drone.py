@@ -1,6 +1,6 @@
 import numpy as np
 
-from simple_drone import Disturber, Drone
+from simple_drone import TrajectoryDisturber, Drone
 from visualization import SceneVisualization
 from utils import create_random_trajectory
 
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     lim = (0, 10)
 
     agents = list()
-    agents.append(Disturber(agents, create_random_trajectory(7, n_frames, lim)))
+    agents.append(TrajectoryDisturber(agents, create_random_trajectory(7, n_frames, lim)))
     agents.extend([Drone(agents, np.array([2, 5]), borders=lim),
                    Drone(agents, np.array([4, 5]), borders=lim),
                    Drone(agents, np.array([7, 7]), borders=lim),
