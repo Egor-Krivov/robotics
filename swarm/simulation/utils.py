@@ -3,9 +3,9 @@ from scipy.interpolate import interp1d
 import collections
 
 
-def create_random_trajectory(points_initial, points_generated, lim):
-    x = np.linspace(*lim, num=points_initial)
-    y = np.random.uniform(low=lim[0] + 0.5, high=lim[1]- 0.5, size=points_initial)
+def create_random_trajectory(low, high, points_initial=7, points_generated=1000):
+    x = np.linspace(low, high, num=points_initial)
+    y = np.random.uniform(low=low + 0.5, high=high - 0.5, size=points_initial)
     f2 = interp1d(x, y, kind='cubic')
     trajectory_x = np.linspace(0, 10, num=points_generated, endpoint=True).reshape(-1, 1)
     trajectory_y = f2(trajectory_x)

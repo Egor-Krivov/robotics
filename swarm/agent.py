@@ -1,9 +1,9 @@
 class Agent:
-    def __init__(self, agents, init_position):
+    def __init__(self, agents, initial_position):
         self.agents = agents
-        self.position = init_position
+        self.position = initial_position
 
-    def set_position(self, position):
+    def update_position(self, position):
         self.position = position
 
     def get_next_position(self):
@@ -11,7 +11,7 @@ class Agent:
 
 
 class TrajectoryAgent(Agent):
-    def __init__(self, trajectory, agents):
+    def __init__(self, agents, trajectory):
         self.iteration = 0
         self.trajectory = trajectory
 

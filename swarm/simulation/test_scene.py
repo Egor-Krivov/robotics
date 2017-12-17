@@ -1,8 +1,9 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from scene import Disturber, Drone, Scene
-from utils import flatten, create_trajectory
+import matplotlib.pyplot as plt
+import numpy as np
+
+from simulation.scene import Disturber, Drone, Scene
+from utils import flatten, create_random_trajectory
 
 low = 0
 high = 10
@@ -47,7 +48,7 @@ def render():
     plt.show()
 
 
-trajectory = create_trajectory(low, high, points_initial, points_generated=n_frames)
+trajectory = create_random_trajectory(low, high, points_initial, points_generated=n_frames)
 
 swarm = (Drone(initial_pos=np.array([2, 5]), drone_id=1), Drone(initial_pos=np.array([4, 5]), drone_id=2), Drone(initial_pos=np.array([7, 7]), drone_id=3),
          Drone(initial_pos=np.array([6, 5]), drone_id=4), Drone(initial_pos=np.array([8, 1]), drone_id=5), Drone(initial_pos=np.array([8, 8]), drone_id=6),
