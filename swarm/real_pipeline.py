@@ -29,7 +29,7 @@ while True:
     # First get real positions
     for i, agent in enumerate(agents[1:]):
         agent.update_position(get_drone_real_position(i))
-        
+
     # Then make decisions
     for i, agent in enumerate(agents[1:]):
         send_drone_real_desired_position(i, agent.get_next_position())

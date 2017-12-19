@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn.preprocessing import normalize
 from utils import calc_normal, calc_dir
-from  itertools import permutations, combinations
+from itertools import permutations, combinations
 
+
+moment = 0.9
 
 class Disturber:
     """Disturber"""
@@ -49,6 +51,7 @@ class Drone:
                 self.velocity_dir = np.zeros(2)
                 self.normal = np.zeros(2)
                 self.force_dir = np.zeros(2)
+                self.old_force = self.force_dir
                 self.drone_id = drone_id
     def set_position(self, position):
         self.current_pos = position
@@ -58,6 +61,7 @@ class Drone:
         self.current_pos = self.next_pos
         self.velocity_dir = self.current_pos - self.previous_pos
         self.normal = calc_normal(self.velocity_dir)
+        self.old_force = self.force_dir
 
 
 class Scene:
@@ -98,6 +102,9 @@ class Scene:
                 print('ALARM!!')
             else:
                 drone.force_dir=np.zeros(2)
+
+        for drone in self.drones:
+            drone.force_dir = drone.old_force * moment + (moment - 1) * drone.force_dir
 
         # interaction eith other drones
         """for drone_pair in combinations(self.drones, r=2):
