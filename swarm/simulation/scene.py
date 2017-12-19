@@ -1,13 +1,13 @@
 import numpy as np
 from sklearn.preprocessing import normalize
-from utils import calc_normal
+from utils import calc_normal, calc_dir
 from  itertools import permutations, combinations
 
 
 class Disturber:
     """Disturber"""
     def __init__(self,
-                radius=1,
+                radius=0.2,
                 initial_pos=np.array([5, 5]),
                 step=0.1):
 
@@ -19,11 +19,15 @@ class Disturber:
                 self.velocity_dir = np.zeros(2)
                 self.force_dir = self.velocity_dir
                 self.normal = np.zeros(2)
+                self.memory = [self.initial_pos] * 10
 
-    def set_position(self, position):
+    def set_position(self, position): 
+        self.memory.append(position)
+        self.memory.pop(0)
         self.previous_pos = self.current_pos
         self.current_pos = position
-        self.velocity_dir = normalize((self.current_pos - self.previous_pos).reshape(1, -1)).ravel()
+        #self.velocity_dir = normalize((self.current_pos - self.previous_pos).reshape(1, -1)).ravel()
+        self.velocity_dir = normalize(calc_dir(np.array(self.memory)).reshape(1, -1)).ravel()
         self.force_dir = self.velocity_dir
         self.normal = calc_normal(self.velocity_dir)
 
@@ -31,9 +35,9 @@ class Disturber:
 class Drone:
     """Drone"""
     def __init__(self,
-                radius=1,
+                radius=0.2,
                 initial_pos=np.array([5, 5]),
-                step=0.1,
+                step=0.05,
                 drone_id=0):
 
                 self.radius = radius
@@ -46,7 +50,6 @@ class Drone:
                 self.normal = np.zeros(2)
                 self.force_dir = np.zeros(2)
                 self.drone_id = drone_id
-
     def set_position(self, position):
         self.current_pos = position
 
@@ -68,7 +71,7 @@ class Scene:
         self.swarm_position = [drone.current_pos for drone in self.drones]
         self.time = 0
         self.disturber = disturber
-        self.borders = (0, 10)
+        self.borders = (-1, 1)
         self.eps = eps
 
     def set_position(self, swarm_position, disturber_position):
@@ -90,12 +93,14 @@ class Scene:
         for drone in self.drones:
             if (np.linalg.norm(drone.current_pos - self.disturber.current_pos)) <= (drone.radius + self.disturber.radius):
                 force_dir = self.disturber.normal.ravel() * np.sign(np.dot(drone.current_pos - self.disturber.current_pos, self.disturber.normal.ravel()))
+                #force_dir = normalize((drone.current_pos - self.disturber.current_pos).reshape(1, -1)).ravel()
                 drone.force_dir = force_dir
+                print('ALARM!!')
             else:
                 drone.force_dir=np.zeros(2)
 
         # interaction eith other drones
-        for drone_pair in combinations(self.drones, r=2):
+        """for drone_pair in combinations(self.drones, r=2):
             if np.linalg.norm(drone_pair[0].current_pos - drone_pair[1].current_pos) <= (drone_pair[0].radius + drone_pair[1].radius):
                 force_dir = normalize((drone_pair[0].current_pos - drone_pair[1].current_pos).reshape(1, -1)).ravel()
                 drone_pair[0].force_dir += force_dir
@@ -117,7 +122,7 @@ class Scene:
                 drone.force_dir += force_dir
 
         # moving back to initial point if there is no danger
-        """for drone in self.drones:
+        for drone in self.drones:
             if np.linalg.norm(drone.force_dir) == 0:
                 if np.linalg.norm(drone.current_pos - drone.initial_pos) >= self.eps:
                     force_dir = normalize((drone.initial_pos - drone.current_pos).reshape(1, -1)).ravel()
